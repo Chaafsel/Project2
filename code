@@ -1,0 +1,114 @@
+import time
+import pygame
+import random
+
+class Node:
+  def __init__(self, value, tail):
+    self.Tail = tail
+    self.Value = value
+    self.IsEmpty = False
+
+class Empty: 
+  def __init__(self):
+    self.IsEmpty = True
+  def __str__(self):
+      return ""
+  def draw(self, offset, screen, texture):
+      return None
+  def reset (self):
+      return None 
+
+Empty = Empty()
+
+class Point:
+    def __init__(self, x, y):
+        self.X = x
+        self.Y = y
+    def __str__(self):
+        return "(" + str(self.X) + "," + str(self.Y) + ")"
+class Tile:
+  def __init__(self, position):   
+    self.Up = Empty
+    self.visited = False
+    self.Down = Empty
+    self.Left = Empty
+    self.Right = Empty
+    self.Position = position
+  def __str__(self):
+      if self.visited == False:
+          self.visited = True 
+          something = str(self.Position) +str(self.Up) + str(self.Down) + str(self.Left) + str(self.Right)
+          return something 
+      else: return "" 
+  def draw(self, offset, screen, texture):
+       if not self.visited:
+           _width = int(offset / 3)
+           screen.blit(pygame.transform.scale(texture, (offset -1, offset - 1)), 
+                      (_width + self.Position.X * offset, 
+                       _width + self.Position.Y * offset))
+           self.visited = True
+
+           self.Down.draw(offset, screen, texture)
+           self.Up.draw(offset, screen, texture)
+           self.Left.draw(offset, screen, texture)
+           self.Right.draw(offset, screen, texture)
+  def reset(self):
+       if self.visited == True:
+           self.visited = False 
+           self.Up.reset()
+           self.Down.reset()
+           self.Right.reset()
+           self.Left.reset()
+
+
+
+dimension = 12
+
+def build_square_matrix (dimension):
+  entry_point = None
+  above_line = None
+  prev_node = None
+  for row in range(0, 12):
+    for column in range(0, 12):
+      node = Tile(Point(column, row))
+      
+      if row == 0 and column == 0:
+        entry_point = node
+      if (column == 0):
+        prev_node = node        
+      else:
+        prev_node.Right = node
+        node.Left = prev_node
+        prev_node = node
+      if(row > 0):
+        node.Up = above_line
+        above_line.Down = node
+        above_line = above_line.Right
+    
+    while prev_node.Left != Empty:
+      prev_node = prev_node.Left
+    above_line = prev_node
+  return entry_point
+
+res = build_square_matrix(dimension)
+
+#Code to intitialize the image the pygame window shows. Offset is changeable!
+pygame.init()
+size = width, height = 600, 600
+white = 255, 255, 255
+green = 50, 255, 100
+screen = pygame.display.set_mode(size)
+offset = 30
+board_size = 10
+white_pixel = pygame.image.load("Content\white_pixel.png").convert()
+
+#Code to make sure the image refreshes but does not overlap
+while True:
+    pygame.event.pump()    
+    screen.fill(green)  
+ 
+    res.draw(offset, screen,white_pixel)
+    res.reset()
+    pygame.display.flip()
+    time.sleep(1)
+           
